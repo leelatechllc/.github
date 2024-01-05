@@ -2,48 +2,6 @@ name: Docker Build
 
 on:
   workflow_call:
-    inputs:
-      # Optional
-      # aws-account-id:
-      #   default: "190405961846"
-      #   description: AWS Account ID
-      #   required: false
-      #   type: string
-      # aws-region:
-      #   description: AWS Region
-      #   default: "us-west-2"
-      #   required: false
-      #   type: string
-      dockerfile-context:
-        default: .
-        required: false
-        type: string
-      dockerfile-path:
-        default: Dockerfile
-        required: false
-        type: string
-      docker-push:
-        default: true
-        required: false
-        type: boolean
-      # ecr-repository:
-      #   default: ${{ github.repository }}
-      #   required: false
-      #   type: string
-      # java-version:
-      #   default: 8.0.212
-      #   required: false
-      #   type: string
-      # ghp-url:
-      #   default: ''
-      #   required: false
-      #   type: string
-    secrets:
-      dockerhub_username:
-        required: false
-      dockerhub_password:
-        required: false
-        
 env:
   MAVEN_OPTS: "-Xms1024m -Xmx2048m -XX:+UseG1GC -XX:+UseStringDeduplication -noverify -Dmaven.artifact.threads=50 -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.http.retryhandler.count=5 -Dmaven.wagon.httpconnectionManager.ttlSeconds=240 -Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true -Dmaven.wagon.http.ssl.ignore.validity.dates=true"
   _JAVA_OPTIONS: "-Djava.io.tmpdir=/tmp/"
