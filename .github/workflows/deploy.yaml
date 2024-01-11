@@ -1,56 +1,14 @@
 # Reusable Deploy Workflow
 
 name: Deploy
-
 on:
   workflow_call:
     inputs:
-      # # Optional
-      # argo-timeout:
-      #   description: Number of seconds until Argo times out during a deploy
-      #   default: 900
-      #   required: false
-      #   type: number
-      # aws-account-id:
-      #   default: "190405961846"
-      #   description: AWS Account ID
-      #   required: false
-      #   type: string
-      # aws-region:
-      #   description: AWS Region
-      #   default: "us-west-2"
-      #   required: false
-      #   type: string
-      # newman-project:
-      #   description: Newman Project Name
-      #   default: ""
-      #   required: false
-      #   type: string
-
-      # Required
-      # argo-project:
-      #   description: Name of the Argo project for this application
-      #   required: true
-      #   type: string
-      # datadog-app-name:
-      #   description: Name of this application in DataDog
-      #   required: true
-      #   type: string
-      # ecr-repository:
-      #   description: Name of the application ECR repository to deploy
-      #   required: true
-      #   type: string
-      # environment:
-      #   default: dev
-      #   description: "Name of the environment to deliver to. [dev | qa | prod]"
-      #   required: true
-      #   type: string
-    # secrets:
-    #   argo-password:
-    #     required: true
-    #   argo-username:
-    #     required: true
-
+      environment:
+        default: dev
+        description: "Name of the environment to deliver to. [dev | qa | prod]"
+        required: true
+        type: string
 jobs:
   deploy:
     name: Deploy
