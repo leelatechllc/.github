@@ -42,10 +42,8 @@ jobs:
         if: github.event_name == 'pull_request'
 
       - name: Showing git branch
-        run: |
-          GIT_BRANCH=${GITHUB_BASE_REF:-${GITHUB_REF_NAME}}
-          echo "GIT_BRANCH=$GIT_BRANCH" >> $GITHUB_ENV
-          cat ${{ env.GIT_BRANCH }}
+        run: echo The branc is ${GITHUB_REF##*/}
+
   
   #     - name: Set environment variables
   #       run: |
