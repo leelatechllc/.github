@@ -1,0 +1,153 @@
+# Reusable Deploy Workflow
+
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      # # Optional
+      # argo-timeout:
+      #   description: Number of seconds until Argo times out during a deploy
+      #   default: 900
+      #   required: false
+      #   type: number
+      # aws-account-id:
+      #   default: "190405961846"
+      #   description: AWS Account ID
+      #   required: false
+      #   type: string
+      # aws-region:
+      #   description: AWS Region
+      #   default: "us-west-2"
+      #   required: false
+      #   type: string
+      # newman-project:
+      #   description: Newman Project Name
+      #   default: ""
+      #   required: false
+      #   type: string
+
+      # Required
+      # argo-project:
+      #   description: Name of the Argo project for this application
+      #   required: true
+      #   type: string
+      # datadog-app-name:
+      #   description: Name of this application in DataDog
+      #   required: true
+      #   type: string
+      # ecr-repository:
+      #   description: Name of the application ECR repository to deploy
+      #   required: true
+      #   type: string
+      # environment:
+      #   default: dev
+      #   description: "Name of the environment to deliver to. [dev | qa | prod]"
+      #   required: true
+      #   type: string
+    # secrets:
+    #   argo-password:
+    #     required: true
+    #   argo-username:
+    #     required: true
+
+jobs:
+  deploy:
+    name: Deploy
+    environment: ${{ inputs.environment }}
+    runs-on:
+      - Linux
+      - X64
+      - USA  
+    # container:
+    #   image: docker://190405961846.dkr.ecr.us-west-2.amazonaws.com/svc/argocd-cli:v1.3.6
+    #   env:
+    #     ARGO_USER: ${{ secrets.argo-username }}
+    #     ARGO_PASSWORD: ${{ secrets.argo-password }}
+    #     ARGO_PROJECT: ${{ inputs.argo-project }}
+    #     ARGO_TIMEOUT: ${{ inputs.argo-timeout }}
+    #     ECR_REPO: ${{ inputs.aws-account-id }}.dkr.ecr.${{ inputs.aws-region }}.amazonaws.com/${{ inputs.ecr-repository }}
+        
+    steps:         
+      - uses: actions/checkout@v3
+
+      - uses: jwalton/gh-find-current-pr@v1.3.2
+        id: findPr
+        with:
+          state: closed
+      - run: echo "PR_NUMBER=${PR}" >> $GITHUB_ENV
+        if: success() && steps.findPr.outputs.number && github.event_name == 'push'
+        env:
+          PR: ${{ steps.findPr.outputs.pr }}
+
+      - run: echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+        if: github.event_name == 'pull_request'
+
+      - name: Showing git branch
+        run: |
+          GIT_BRANCH=${GITHUB_BASE_REF:-${GITHUB_REF_NAME}}
+          echo "GIT_BRANCH=$GIT_BRANCH" >> $GITHUB_ENV
+          cat ${{ env.GIT_BRANCH }}
+  
+  #     - name: Set environment variables
+  #       run: |
+  #         GIT_BRANCH=${GITHUB_BASE_REF:-${GITHUB_REF_NAME}}
+  #         echo "GIT_BRANCH=$GIT_BRANCH" >> $GITHUB_ENV
+  #     - name: Argo Set Image
+  #       run: |
+  #         #!/bin/sh
+  #         set -ex
+  #         echo "::group::Set Image Tag"
+  #         argocd  --grpc-web --insecure login argocd.fff-svc.com --username $ARGO_USER --password $ARGO_PASSWORD
+  #         argocd  --grpc-web --insecure  app set $ARGO_PROJECT -p honeycomb-java-chart.honeycomb.image.repository=$ECR_REPO
+  #         argocd  --grpc-web --insecure app set $ARGO_PROJECT -p honeycomb-java-chart.honeycomb.image.tag=${{ env.PR_NUMBER }}-${{ env.GIT_BRANCH }}
+  #         echo "::endgroup::"
+  #     - name: Argo Sync
+  #       run: |
+  #         #!/bin/sh
+  #         set -ex
+  #         echo "::group::Sync Argo Project"
+  #         argocd --grpc-web --insecure app sync $ARGO_PROJECT
+  #         argocd --grpc-web --insecure app wait $ARGO_PROJECT --health --timeout $ARGO_TIMEOUT
+  #         echo "::endgroup::"
+  #     - name: Debug Information
+  #       if: ${{ failure() }}
+  #       env:
+  #         DD_ENV: ${{ inputs.environment }}
+  #         DD_APP_NAME: ${{ inputs.datadog-app-name }}
+  #       run: |
+  #         #!/bin/sh
+  #         echo "Looks like something went wrong. The sections below contains links and log dumps to help you troubleshoot the issue."
+  #         echo "::group::DataDog"
+  #         echo "DataDog events for your service can be found here:"
+  #         echo "https://app.datadoghq.com/logs?query=kube_namespace%3Ahoneycomb-$DD_ENV%20service%3A$DD_APP_NAME"
+  #         echo "::endgroup::"
+  #         echo "::group::Argo CD"
+  #         echo "Argo logs from your workflow:"
+  #         echo $(argocd --grpc-web --insecure app logs $ARGO_PROJECT --since-seconds 300)
+  #         echo "::endgroup::"
+  # newman-test:
+  #   name: Newman Tests
+  #   if: inputs.newman-project != ''
+
+  #   needs: deploy
+  #   runs-on:
+  #     - linux
+  #     - ondemand
+  #   defaults:
+  #     run:
+  #       shell: bash
+  #   steps:
+  #     - name: Change permissions
+  #       run: sudo chown -R $USER:$USER /opt/github-actions-runner/_work/
+  #     - name: Clean Workspace
+  #       run: |
+  #         set -ex
+  #         rm -rf "${{ github.workspace }}"
+  #         mkdir -p "${{ github.workspace }}"
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #     - uses: matt-ball/newman-action@master
+  #       with:
+  #         collection: "newman/${{ inputs.newman-project }}.json"
+  #         environment: "newman/${{ inputs.newman-project }}_${{ inputs.environment }}_environment.json"
